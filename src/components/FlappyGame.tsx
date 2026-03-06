@@ -35,21 +35,25 @@ interface FlappyGameProps {
   width?: number;
   height?: number;
   className?: string;
+  birdImage?: string; // URL to custom bird image
 }
 
 const FlappyGame: React.FC<FlappyGameProps> = ({
   width = 400,
   height = 600,
   className = "",
+  birdImage,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameLoopRef = useRef<number | null>(null);
   const pipeSpawnTimeoutRef = useRef<number | null>(null);
+  const birdImageRef = useRef<HTMLImageElement | null>(null);
 
   // Game state
   const [gameState, setGameState] = useState<GameState>("start");
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Game objects
   const birdRef = useRef<Bird>({
@@ -70,6 +74,26 @@ const FlappyGame: React.FC<FlappyGameProps> = ({
       rotation: 0,
     };
   }, [width, height]);
+
+  // Load bird image
+  useEffect(() => {
+    if (birdImage) {
+      const img = new Image();
+      img.onload = () => {
+        birdImageRef.current = img;
+        setImageLoaded(true);
+      };
+      img.onerror = () => {
+        console.error("Failed to load bird image");
+        birdImageRef.current = null;
+        setImageLoaded(false);
+      };
+      img.src = birdImage;
+    } else {
+      birdImageRef.current = null;
+      setImageLoaded(false);
+    }
+  }, [birdImage]);
 
   // Reset game
   const resetGame = useCallback(() => {
@@ -328,45 +352,58 @@ const FlappyGame: React.FC<FlappyGameProps> = ({
     ctx.translate(bird.x, bird.y);
     ctx.rotate((bird.rotation * Math.PI) / 180);
 
-    // Bird body
-    ctx.fillStyle = "#FFD700";
-    ctx.beginPath();
-    ctx.ellipse(
-      0,
-      0,
-      GAME_CONFIG.BIRD_SIZE / 2,
-      GAME_CONFIG.BIRD_SIZE / 2.5,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
+    if (imageLoaded && birdImageRef.current) {
+      // Draw custom bird image
+      const img = birdImageRef.current;
+      const imageSize = GAME_CONFIG.BIRD_SIZE;
+      ctx.drawImage(
+        img,
+        -imageSize / 2,
+        -imageSize / 2,
+        imageSize,
+        imageSize
+      );
+    } else {
+      // Bird body
+      ctx.fillStyle = "#FFD700";
+      ctx.beginPath();
+      ctx.ellipse(
+        0,
+        0,
+        GAME_CONFIG.BIRD_SIZE / 2,
+        GAME_CONFIG.BIRD_SIZE / 2.5,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
 
-    // Bird wing
-    ctx.fillStyle = "#FFA500";
-    ctx.beginPath();
-    ctx.ellipse(-5, 5, 8, 5, -0.3, 0, Math.PI * 2);
-    ctx.fill();
+      // Bird wing
+      ctx.fillStyle = "#FFA500";
+      ctx.beginPath();
+      ctx.ellipse(-5, 5, 8, 5, -0.3, 0, Math.PI * 2);
+      ctx.fill();
 
-    // Bird eye
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.arc(8, -5, 7, 0, Math.PI * 2);
-    ctx.fill();
+      // Bird eye
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(8, -5, 7, 0, Math.PI * 2);
+      ctx.fill();
 
-    ctx.fillStyle = "black";
-    ctx.beginPath();
-    ctx.arc(10, -5, 4, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = "black";
+      ctx.beginPath();
+      ctx.arc(10, -5, 4, 0, Math.PI * 2);
+      ctx.fill();
 
-    // Bird beak
-    ctx.fillStyle = "#FF6347";
-    ctx.beginPath();
-    ctx.moveTo(12, 2);
-    ctx.lineTo(22, 5);
-    ctx.lineTo(12, 8);
-    ctx.closePath();
-    ctx.fill();
+      // Bird beak
+      ctx.fillStyle = "#FF6347";
+      ctx.beginPath();
+      ctx.moveTo(12, 2);
+      ctx.lineTo(22, 5);
+      ctx.lineTo(12, 8);
+      ctx.closePath();
+      ctx.fill();
+    }
 
     ctx.restore();
 
@@ -433,7 +470,7 @@ const FlappyGame: React.FC<FlappyGameProps> = ({
         height / 2 + 100,
       );
     }
-  }, [width, height, gameState, score, highScore]);
+  }, [width, height, gameState, score, highScore, imageLoaded]);
 
   // Main game loop
   useEffect(() => {

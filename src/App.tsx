@@ -6,7 +6,9 @@ function App() {
       <h1 className="text-4xl font-bold text-white mb-8 drop-shadow-lg">
         Flappy Bird Game
       </h1>
-      <FlappyGame width={400} height={600} className="mb-8" />
+      {/* Use the birdImage prop to provide a custom bird image */}
+      {/* Example: <FlappyGame width={400} height={600} className="mb-8" birdImage="/path/to/your/bird-image.png" /> */}
+      <FlappyGame width={400} height={600} className="mb-8" birdImage="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4R0G-ys08bTgWzhY12K8Rq6c6HqQtD8wBLQ&s" />
       <p className="text-white text-lg drop-shadow">
         Click or press Space to play!
       </p>
